@@ -1,6 +1,6 @@
 import * as React from 'react';
 import {createContext} from "react";
-import {GraphValue} from "../../models/graphValues";
+import {CrushValue, PriceValue} from "../../models/graphValues";
 import {GetCrushes, PostCrush} from "../../services/api.dofus-tools.service";
 import {LineChart, XAxis, YAxis, CartesianGrid, Tooltip, Line, Legend} from 'recharts';
 import {Button, TextField} from "@mui/material";
@@ -11,16 +11,17 @@ type Props = {
     server_id: number
 }
 
-const graphValuesDefault:GraphValue[] = []
+const graphValuesDefault:CrushValue[] = []
 
 export const EquipmentsDetailsContext = createContext<Props>({} as Props);
 
 const CrushGraph: React.FC<Props> = ({ankama_id, server_id}) => {
-    const [graphValues, setGrapValues]: [GraphValue[], (graphValues: GraphValue[]) => void] = React.useState(
+    const [graphValues, setGrapValues]: [CrushValue[], (graphValues: CrushValue[]) => void] = React.useState(
         graphValuesDefault
     );
 
     const [crushValue, setCrushValue] : [number, (crushValue: number) => void] = React.useState(0);
+
 
     const callApi = (ankama_id: number, server_id: number) => {
         GetCrushes(ankama_id, server_id).then(response =>{
@@ -28,15 +29,15 @@ const CrushGraph: React.FC<Props> = ({ankama_id, server_id}) => {
         })
     };
 
-    const CreateCrush = (value: number) => {
-        const graphValue: GraphValue = {
+    const CreateCrush = () => {
+        const crush: CrushValue = {
             dofusId: ankama_id,
             serverId: server_id,
-            value: value,
+            value: crushValue,
             createdAt: moment().toDate(),
             createdBy: "test"
         }
-        PostCrush(graphValue).then(response =>{
+        PostCrush(crush).then(response =>{
             callApi(ankama_id, server_id);
         })
     }
@@ -53,15 +54,17 @@ const CrushGraph: React.FC<Props> = ({ankama_id, server_id}) => {
         return moment(dateString).format('HH:mm DD.MM.yyyy');
     }
 
+    // @ts-ignore
     return (
         <div >
             <TextField id="crushingText"
-                       label="coefficient de brisage"
+                       label="Coefficient de brisage"
                        variant="outlined"
                        onChange={(e) => setCrushValue(+e.target.value)}/>
+
             <Button variant="outlined" style={{marginLeft: '30px'}} onClick={ (e) => {
                 if(!isNaN(Number(crushValue))) {
-                    CreateCrush(crushValue)
+                    CreateCrush()
                 }
             }}> Ajouter </Button>
             <LineChart width={730} height={250} data={graphValues}
